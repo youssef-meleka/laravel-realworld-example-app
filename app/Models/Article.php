@@ -66,4 +66,9 @@ class Article extends Model
 
         $this->attributes['slug'] = Str::slug($title);
     }
+
+    public function revisions()
+    {
+        return $this->hasMany(ArticleRevision::class);
+    }
 }
