@@ -12,6 +12,9 @@ use App\Http\Resources\ArticleResource;
 use App\Models\Article;
 use App\Models\User;
 use App\Services\ArticleService;
+use App\Models\ArticleRevision;
+use Illuminate\Http\Request;
+
 
 class ArticleController extends Controller
 {
@@ -36,10 +39,10 @@ class ArticleController extends Controller
         return new ArticleCollection($this->article->getFiltered($request->validated()));
     }
 
-    public function show(Article $article): ArticleResource
-    {
-        return $this->articleResponse($article);
-    }
+    // public function show(Article $article): ArticleResource
+    // {
+    //     return $this->articleResponse($article);
+    // }
 
     public function store(StoreRequest $request): ArticleResource
     {
@@ -77,7 +80,7 @@ class ArticleController extends Controller
 
         return $this->articleResponse($article);
     }
-    
+
     protected function syncTags(Article $article): void
     {
         $this->articleService->syncTags($article, $this->request->validated()['article']['tagList'] ?? []);
@@ -86,5 +89,37 @@ class ArticleController extends Controller
     protected function articleResponse(Article $article): ArticleResource
     {
         return new ArticleResource($article->load('user', 'users', 'tags', 'user.followers'));
+    }
+
+    // Blade functions
+    
+    public function show($slug)
+    {
+        $article = Article::where('slug', $slug)->firstOrFail();
+        $revisions = $article->revisions()->orderBy('updated_at', 'desc')->get();
+
+        return view('articles.show', [
+            'article' => $article,
+            'revisions' => $revisions,
+        ]);
+    }
+
+    public function revert($slug, $revisionId)
+    {
+        $article = Article::where('slug', $slug)->firstOrFail();
+        $revision = ArticleRevision::findOrFail($revisionId);
+
+        // Check if the current user is the article author
+        if (auth()->user()->id !== $article->user_id) {
+            return redirect()->back()->with('error', 'You are not authorized to revert this article.');
+        }
+
+        // Revert the article to the selected revision
+        $article->update([
+            'title' => $revision->title,
+            'body' => $revision->body,
+        ]);
+
+        return redirect()->back()->with('success', 'Article reverted successfully!');
     }
 }
