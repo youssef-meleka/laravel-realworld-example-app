@@ -1,55 +1,66 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ArticleController;
-use App\Http\Controllers\CommentController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\TagController;
-use App\Http\Controllers\ArticleRevisionController;
+use App\Http\Controllers\{
+    ArticleController,
+    CommentController,
+    ProfileController,
+    UserController,
+    TagController,
+    ArticleRevisionController
+};
 
+// Public Routes
 Route::get('profiles/{user}', [ProfileController::class, 'show']);
 Route::get('tags', [TagController::class, 'index']);
 Route::get('articles/{article}/comments', [CommentController::class, 'index']);
 
-Route::prefix('users')->group(function () {
-    Route::post('/', [UserController::class, 'store']);
-    Route::post('login', [UserController::class, 'login']);
+// User Authentication Routes
+Route::prefix('users')->controller(UserController::class)->group(function () {
+    Route::post('/', 'store');
+    Route::post('login', 'login');
 });
 
-Route::prefix('articles')->group(function () {
-    Route::get('/', [ArticleController::class, 'index']);
-    Route::get('feed', [ArticleController::class, 'feed']);
-    Route::get('{article}', [ArticleController::class, 'show']);
+// Article Routes (Public)
+Route::prefix('articles')->controller(ArticleController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::get('feed', 'feed');
+    Route::get('{article}', 'show');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::prefix('user')->group(function () {
-        Route::get('/', [UserController::class, 'show']);
-        Route::put('/', [UserController::class, 'update']);
+// Authenticated Routes
+Route::middleware('auth:sanctum')->group(function () {
+    // User Routes
+    Route::prefix('user')->controller(UserController::class)->group(function () {
+        Route::get('/', 'show');
+        Route::put('/', 'update');
     });
 
-    Route::prefix('profiles')->group(function () {
-        Route::post('{user}/follow', [ProfileController::class, 'follow']);
-        Route::delete('{user}/follow', [ProfileController::class, 'unfollow']);
+    // Profile Follow/Unfollow
+    Route::prefix('profiles')->controller(ProfileController::class)->group(function () {
+        Route::post('{user}/follow', 'follow');
+        Route::delete('{user}/follow', 'unfollow');
     });
 
-    Route::prefix('articles')->group(function () {
-        Route::post('/', [ArticleController::class, 'store']);
-        Route::put('{article}', [ArticleController::class, 'update']);
-        Route::delete('{article}', [ArticleController::class, 'destroy']);
-        Route::post('{article}/favorite', [ArticleController::class, 'favorite']);
-        Route::delete('{article}/favorite', [ArticleController::class, 'unfavorite']);
+    // Article Actions (Authenticated)
+    Route::prefix('articles')->controller(ArticleController::class)->group(function () {
+        Route::post('/', 'store');
+        Route::put('{article}', 'update');
+        Route::delete('{article}', 'destroy');
+        Route::post('{article}/favorite', 'favorite');
+        Route::delete('{article}/favorite', 'unfavorite');
     });
 
-    Route::prefix('articles')->group(function () {
-        Route::post('{article}/comments', [CommentController::class, 'store']);
-        Route::delete('{article}/comments/{comment}', [CommentController::class, 'destroy']);
+    // Article Comments
+    Route::prefix('articles/{article}/comments')->controller(CommentController::class)->group(function () {
+        Route::post('/', 'store');
+        Route::delete('{comment}', 'destroy');
     });
 });
 
-Route::middleware('auth:api')->group(function () {
-    Route::get('/articles/{article}/revisions', [ArticleRevisionController::class, 'index']);
-    Route::get('/articles/{article}/revisions/{revision}', [ArticleRevisionController::class, 'show']);
-    Route::post('/articles/{article}/revisions/{revision}/revert', [ArticleRevisionController::class, 'revert']);
+// Article Revisions (Authenticated API Access)
+Route::middleware('auth:sanctum')->prefix('articles/{article}/revisions')->controller(ArticleRevisionController::class)->group(function () {
+    Route::get('/', 'index');
+    Route::get('{revision}', 'show');
+    Route::post('{revision}/revert', 'revert');
 });
