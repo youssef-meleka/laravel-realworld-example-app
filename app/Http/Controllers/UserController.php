@@ -6,49 +6,51 @@ use App\Http\Requests\User\LoginRequest;
 use App\Http\Requests\User\StoreRequest;
 use App\Http\Requests\User\UpdateRequest;
 use App\Models\User;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    protected User $user;
+    public function __construct(protected User $user) {}
 
-    public function __construct(User $user)
+    public function show(): JsonResponse
     {
-        $this->user = $user;
+        return $this->userResponse(auth()->tokenById(auth()->id()));
     }
 
-    public function show(): array
-    {
-        return $this->userResponse(auth()->getToken()->get());
-    }
-
-    public function store(StoreRequest $request): array
+    public function store(StoreRequest $request): JsonResponse
     {
         $user = $this->user->create($request->validated()['user']);
 
-        auth()->login($user);
+        $token = auth()->login($user);
 
-        return $this->userResponse(auth()->refresh());
+        return $this->userResponse($token);
     }
 
-    public function update(UpdateRequest $request): array
+    public function update(UpdateRequest $request): JsonResponse
     {
         auth()->user()->update($request->validated()['user']);
 
-        return $this->userResponse(auth()->getToken()->get());
+        return $this->userResponse(auth()->tokenById(auth()->id()));
     }
 
-    public function login(LoginRequest $request): array
+    public function login(LoginRequest $request): JsonResponse
     {
         if ($token = auth()->attempt($request->validated()['user'])) {
             return $this->userResponse($token);
         }
 
-        abort(Response::HTTP_FORBIDDEN);
+        throw ValidationException::withMessages(['error' => 'Invalid credentials.']);
     }
 
-    protected function userResponse(string $jwtToken): array
+    protected function userResponse(?string $jwtToken): JsonResponse
     {
-        return ['user' => ['token' => $jwtToken] + auth()->user()->toArray()];
+        return response()->json([
+            'user' => [
+                'token' => $jwtToken,
+                ...auth()->user()->toArray()
+            ]
+        ]);
     }
 }
