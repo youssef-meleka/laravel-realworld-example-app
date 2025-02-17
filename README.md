@@ -1,37 +1,24 @@
-### Laravel implementation of RealWorld app
+## Objectives of the Project 
 
-This Laravel app is part of the [RealWorld](https://github.com/gothinkster/realworld) project and implementation of the [Laravel best practices](https://github.com/alexeymezenin/laravel-best-practices).
+- Upgrade an existing Laravel backend application to Laravel 10.
 
-You might also check [Ruby on Rails version](https://github.com/alexeymezenin/ruby-on-rails-realworld-example-app) of this app.
+- Implement an Article Revision Feature that automatically saves the previous state of an article every time it is updated.
 
-See how the exact same Medium.com clone (called [Conduit](https://demo.realworld.io)) is built using different [frontends](https://codebase.show/projects/realworld?category=frontend) and [backends](https://codebase.show/projects/realworld?category=backend). Yes, you can mix and match them, because **they all adhere to the same [API spec](https://gothinkster.github.io/realworld/docs/specs/backend-specs/introduction)**
+## Branch 1 - `main` branch
 
-### How to run the API
+- Upgrade Laravel: Update the backend project to Laravel 10 and ensure all functionality works as expected.
 
-Make sure you have PHP and Composer installed globally on your computer.
+- Database Migration: Create a new article_revisions table to store revision history.
 
-Clone the repo and enter the project folder
+- Revision Creation Logic: Use model events or observers to automatically create a revision record whenever an article is updated.
 
-```
-git clone https://github.com/alexeymezenin/laravel-realworld-example-app.git
-cd laravel-realworld-example-app
-```
+**API Endpoints:**
 
-Install the app
+- GET /api/articles/{id}/revisions: Fetch the revision history for a specific article.
 
-```
-composer install
-cp .env.example .env
-```
+- GET /api/articles/{id}/revisions/{revision_id}: Fetch the data for a specific revision.
 
-Run the web server
+- POST /api/articles/{id}/revisions/{revision_id}/revert: Revert an article to a specific revision (authorized users only).
 
-```
-php artisan serve
-```
-
-That's it. Now you can use the api, i.e.
-
-```
-http://127.0.0.1:8000/api/articles
-```
+## Branch 2 - `feat/blade_front` branch
+Added blade templates (for trial) - to replace the external react project - to make it accessible and easy to test
