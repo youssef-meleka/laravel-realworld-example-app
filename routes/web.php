@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\ArticleRevisionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -18,5 +19,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/articles/{slug}/revisions/{revisionId}/revert', [ArticleController::class, 'revert'])
-    ->name('articles.revisions.revert');
+// Article Revision Routes
+Route::prefix('articles/{article}/revisions')->group(function () {
+    Route::get('/', [ArticleRevisionController::class, 'index'])->name('articles.revisions.index'); // List all revisions
+    Route::get('/{revision}', [ArticleRevisionController::class, 'show'])->name('articles.revisions.show'); // Display a specific revision
+    Route::post('/{revision}/revert', [ArticleRevisionController::class, 'revert'])
+        ->middleware('auth')
+        ->name('articles.revisions.revert'); // Revert to a specific revision (Requires authentication)
+});

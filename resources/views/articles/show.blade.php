@@ -21,10 +21,7 @@
                         <strong>Updated At:</strong> {{ $revision->updated_at->format('Y-m-d H:i:s') }}
                     </div>
                     @if (auth()->check() && auth()->user()->id === $article->user_id)
-                        <form action="{{ route('articles.revisions.revert', [$article->slug, $revision->id]) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-success">Revert</button>
-                        </form>
+                        <a href="{{ route('articles.revert', [$article->slug, $revision->id]) }}" class="btn btn-warning">Revert</a>
                     @endif
                 </li>
             @endforeach
